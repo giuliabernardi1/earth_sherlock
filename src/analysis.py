@@ -3,8 +3,6 @@ import pymannkendall as mk
 from scipy import stats
 import statsmodels.api as sm
 
-# inside analyze_trend(), after the existing tests:
-
 
 DAYS_PER_YEAR = 365.25
 
