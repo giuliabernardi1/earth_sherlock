@@ -1,6 +1,10 @@
 import pandas as pd
 import pymannkendall as mk
 from scipy import stats
+import statsmodels.api as sm
+
+# inside analyze_trend(), after the existing tests:
+
 
 DAYS_PER_YEAR = 365.25
 
@@ -23,6 +27,17 @@ def analyze_trend(anomaly_series: pd.Series) -> dict:
     classic_mann_kendall = mk.original_test(values)
     corrected_mann_kendall = mk.hamed_rao_modification_test(values)
 
+    design_matrix = sm.add_constant(years_elapsed)
+    robust_fit = sm.OLS(values, design_matrix).fit(cov_type="HAC", cov_kwds={"maxlags": 12})
+    robust_p_value = robust_fit.pvalues[1]
+    lag1_autocorrelation = pd.Series(values).autocorr(lag=1)
+
+    all_p_values = [
+        classic_mann_kendall.p,
+        corrected_mann_kendall.p,
+        robust_p_value,
+    ]
+
     return {
         "number_of_months": len(values),
         "number_of_years": years_elapsed[-1],
@@ -33,7 +48,10 @@ def analyze_trend(anomaly_series: pd.Series) -> dict:
         "ols_p_value": ols_result.pvalue,
         "mann_kendall_p_value": classic_mann_kendall.p,
         "corrected_p_value": corrected_mann_kendall.p,
-        "is_significant": corrected_mann_kendall.p < 0.05,
+        "robust_p_value": robust_p_value,
+        "lag1_autocorrelation": lag1_autocorrelation,
+        "is_significant": max(all_p_values) < 0.05,
+        "worst_case_p_value": max(all_p_values),
         "trend_line": pd.Series(
             theil_sen_intercept + theil_sen_slope * years_elapsed, index=valid_series.index
         ),
