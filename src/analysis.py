@@ -15,6 +15,14 @@ def compute_monthly_anomalies(time_series: pd.Series) -> pd.Series:
     return time_series - monthly_climatology
 
 
+def compare_two_regions(
+    first_series: pd.Series, second_series: pd.Series
+) -> tuple[dict, dict]:
+    first_result = analyze_trend(compute_monthly_anomalies(first_series))
+    second_result = analyze_trend(compute_monthly_anomalies(second_series))
+    return first_result, second_result
+
+
 def analyze_trend(anomaly_series: pd.Series) -> dict:
     valid_series = anomaly_series.dropna()
     years_elapsed = ((valid_series.index - valid_series.index[0]).days / DAYS_PER_YEAR).to_numpy()
@@ -56,3 +64,4 @@ def analyze_trend(anomaly_series: pd.Series) -> dict:
             theil_sen_intercept + theil_sen_slope * years_elapsed, index=valid_series.index
         ),
     }
+    

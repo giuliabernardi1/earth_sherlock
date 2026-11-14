@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from src.analysis import analyze_trend, compute_monthly_anomalies
 from src.loaders import load_giovanni_csv
 
-with open("data/giovanni_export.csv", "rb") as csv_file:
+with open("data/italy_temp_15_25.csv", "rb") as csv_file:
     monthly_series, metadata = load_giovanni_csv(csv_file)
 
 monthly_anomalies = compute_monthly_anomalies(monthly_series)
