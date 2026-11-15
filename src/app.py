@@ -232,7 +232,7 @@ def page_demo() -> None:
 
 # ---------- Main ----------
 
-st.set_page_config(page_title="Earth Sherlock - the Trend Detective", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="Earth Sherlock", page_icon="🌍", layout="wide")
 apply_custom_style()
 render_hero()
 

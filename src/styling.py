@@ -95,7 +95,7 @@ def render_hero() -> None:
     st.markdown(
         """
         <div class="hero">
-            <h1>Trend <span>Detective</span></h1>
+            <h1>Earth Sherlock - the Trend Detective</h1>
             <p>Is this Earth science variable changing, where, by how much, and is it significant?</p>
         </div>
         """,
