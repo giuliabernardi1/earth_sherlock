@@ -52,21 +52,21 @@ VARIABLE_CATALOG = {
 }
 
 DEMO_FILE_KEYS = {  # filename label -> catalog key
-    #"temp": "AIRS3STM_006_SurfAirTemp_A",
+    "temp": "AIRS3STM_006_SurfAirTemp_A",
     "humidity": "M2TMNXOCN_5_12_4_QV10M",
     "ozone": "M2TMNXSLV_5_12_4_TO3",
     "rain": "GLDAS_NOAH025_M_2_1_Rainf_tavg",
     "soil": "GLDAS_NOAH025_M_2_1_SoilMoi10_40cm_inst",
-   #"wind": "FLDAS_NOAH01_C_GL_M_001_Wind_f_tavg",
+   "wind": "FLDAS_NOAH01_C_GL_M_001_Wind_f_tavg",
 }
 
 TOPIC_QUESTIONS = {
-    #"Is it getting warmer?": "Temperature",
+    "Is it getting warmer?": "Temperature",
     "Is the air getting more humid?": "Atmosphere moisture",
     "Is rainfall changing?": "Water",
     "Is the ground drying out?": "Land",
     "Is the ozone layer changing?": "Atmosphere composition",
-    #"Are winds getting stronger?": "Wind",
+    "Are winds getting stronger?": "Wind",
 }
 
 

@@ -11,6 +11,7 @@ from catalog import (
     apply_catalog_scaling,
 )
 from loaders import load_giovanni_csv
+from styling import REGION_COLORS, apply_custom_style, render_hero, render_metrics, show_verdict
 from verdict import build_comparison_verdict, build_verdict
 
 DEMO_DIRECTORY = Path("demo_data")
@@ -96,6 +97,77 @@ def render_comparison(first_series, second_series, first_label, second_label, va
         st.write(second_label)
         st.json({key: value for key, value in second_result.items() if key != "trend_line"})
 
+#---------- Styling ----------
+def render_single_region(monthly_series, variable_info: dict) -> None:
+    scaled_series = apply_catalog_scaling(monthly_series, variable_info)
+    monthly_anomalies = compute_monthly_anomalies(scaled_series)
+    trend_result = analyze_trend(monthly_anomalies)
+    units = variable_info["display_units"]
+
+    if variable_info["definition"]:
+        st.caption(f"**What is it?** {variable_info['definition']}")
+
+    render_metrics(trend_result, units)
+
+    figure, (raw_axis, anomaly_axis) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
+    raw_axis.plot(scaled_series, color="#8a8f98", linewidth=1.5)
+    raw_axis.set_title("Monthly values (seasonal cycle visible)")
+    raw_axis.set_ylabel(units)
+    anomaly_axis.axhline(0, color="#0f1b2d", linewidth=0.8, alpha=0.5)
+    anomaly_axis.plot(monthly_anomalies, color=REGION_COLORS["first"], alpha=0.45, label="Monthly anomaly")
+    anomaly_axis.plot(trend_result["trend_line"], color="#0f1b2d", linewidth=3, label="Trend")
+    anomaly_axis.set_title("Seasonal cycle removed")
+    anomaly_axis.set_ylabel(units)
+    anomaly_axis.legend(frameon=False)
+    figure.tight_layout()
+    st.pyplot(figure)
+
+    verdict_text = build_verdict(
+        variable_info["name"], units, trend_result,
+        scaled_series.index.min().year, scaled_series.index.max().year,
+    )
+    show_verdict(verdict_text, trend_result["is_significant"])
+    with st.expander("Statistical details"):
+        st.json({key: value for key, value in trend_result.items() if key != "trend_line"})
+
+
+def render_comparison(first_series, second_series, first_label, second_label, variable_info: dict) -> None:
+    scaled_first_series = apply_catalog_scaling(first_series, variable_info)
+    scaled_second_series = apply_catalog_scaling(second_series, variable_info)
+    first_result, second_result = compare_two_regions(scaled_first_series, scaled_second_series)
+    units = variable_info["display_units"]
+
+    if variable_info["definition"]:
+        st.caption(f"**What is it?** {variable_info['definition']}")
+
+    for label, result in [(first_label, first_result), (second_label, second_result)]:
+        st.markdown(f"##### {label}")
+        render_metrics(result, units)
+
+    figure, axis = plt.subplots(figsize=(11, 4.5))
+    axis.axhline(0, color="#0f1b2d", linewidth=0.8, alpha=0.5)
+    for series, result, label, color in [
+        (scaled_first_series, first_result, first_label, REGION_COLORS["first"]),
+        (scaled_second_series, second_result, second_label, REGION_COLORS["second"]),
+    ]:
+        axis.plot(compute_monthly_anomalies(series), color=color, alpha=0.35)
+        axis.plot(result["trend_line"], color=color, linewidth=3.5, label=label)
+    axis.set_ylabel(f"Anomaly ({units})")
+    axis.set_title("Seasonally adjusted anomalies and trends")
+    axis.legend(frameon=False)
+    figure.tight_layout()
+    st.pyplot(figure)
+
+    comparison_text = build_comparison_verdict(
+        first_label, second_label, first_result, second_result, units
+    )
+    show_verdict(comparison_text, first_result["is_significant"] or second_result["is_significant"])
+    with st.expander("Statistical details"):
+        st.write(first_label)
+        st.json({key: value for key, value in first_result.items() if key != "trend_line"})
+        st.write(second_label)
+        st.json({key: value for key, value in second_result.items() if key != "trend_line"})
+
 
 # ---------- Pages ----------
 
@@ -160,13 +232,14 @@ def page_demo() -> None:
 
 # ---------- Main ----------
 
-st.title("Trend Detective")
-st.caption("Is this Earth science variable changing, where, and by how much?")
+st.set_page_config(page_title="Earth Sherlock - the Trend Detective", page_icon="🌍", layout="wide")
+apply_custom_style()
+render_hero()
 
-selected_page = st.sidebar.radio("Page", ["Demo","Single region", "Compare two regions"])
-if selected_page == "Single region":
-    page_single_region()
-elif selected_page == "Compare two regions":
-    page_compare_two_regions()
-else:
+demo_tab, single_tab, compare_tab = st.tabs(["Demo", "Single region", "Compare two regions"])
+with demo_tab:
     page_demo()
+with single_tab:
+    page_single_region()
+with compare_tab:
+    page_compare_two_regions()
